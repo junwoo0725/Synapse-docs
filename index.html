@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>양준우 - Synapse Docs Portfolio</title>
+    
+    <!-- Tailwind CSS (스타일링) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (UI 라이브러리) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (브라우저에서 JSX 실행) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Custom CSS & Animations -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            background-color: #0f172a; /* slate-900 */
+        }
+        
+        /* Fade In Up Animation */
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scroll Bar Customization */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icons (SVG Components) ---
+        const IconWrapper = ({ children, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+
+        const Icons = {
+            Github: (props) => <IconWrapper {...props}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></IconWrapper>,
+            Mail: (props) => <IconWrapper {...props}><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></IconWrapper>,
+            Server: (props) => <IconWrapper {...props}><rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect><rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect><line x1="6" x2="6.01" y1="6" y2="6"></line><line x1="6" x2="6.01" y1="18" y2="18"></line></IconWrapper>,
+            Database: (props) => <IconWrapper {...props}><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></IconWrapper>,
+            Cpu: (props) => <IconWrapper {...props}><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></IconWrapper>,
+            FileText: (props) => <IconWrapper {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></IconWrapper>,
+            Layers: (props) => <IconWrapper {...props}><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></IconWrapper>,
+            Zap: (props) => <IconWrapper {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></IconWrapper>,
+            GitBranch: (props) => <IconWrapper {...props}><line x1="6" x2="6" y1="3" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></IconWrapper>,
+            List: (props) => <IconWrapper {...props}><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></IconWrapper>,
+            Highlighter: (props) => <IconWrapper {...props}><path d="m9 11-6 6v3h9l3-3"></path><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></IconWrapper>,
+            MessageSquare: (props) => <IconWrapper {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></IconWrapper>,
+            ChevronDown: (props) => <IconWrapper {...props}><path d="m6 9 6 6 6-6"></path></IconWrapper>,
+            ExternalLink: (props) => <IconWrapper {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></IconWrapper>,
+            Code: (props) => <IconWrapper {...props}><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></IconWrapper>,
+            CheckCircle: (props) => <IconWrapper {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></IconWrapper>
+        };
+
+        // --- Components ---
+
+        const Section = ({ children, id, className = "" }) => (
+            <section id={id} className={`py-20 px-6 md:px-12 lg:px-24 ${className}`}>
+                {children}
+            </section>
+        );
+
+        const Badge = ({ children, color = "bg-slate-700 text-slate-200" }) => (
+            <span className={`px-3 py-1 rounded-full text-sm font-medium mr-2 mb-2 inline-block ${color}`}>
+                {children}
+            </span>
+        );
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg hover:shadow-xl transition-shadow ${className}`}>
+                {children}
+            </div>
+        );
+
+        const FeatureItem = ({ icon: Icon, title, desc }) => (
+            <div className="flex items-start space-x-4 mb-6">
+                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 mt-1 min-w-max">
+                    <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="text-lg font-semibold text-slate-100 mb-1">{title}</h4>
+                    <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
+
+        function App() {
+            const [activeSection, setActiveSection] = useState('home');
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    const sections = ['home', 'about', 'skills', 'project', 'contact'];
+                    const scrollPosition = window.scrollY + 100;
+
+                    for (const section of sections) {
+                        const element = document.getElementById(section);
+                        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
+                            setActiveSection(section);
+                        }
+                    }
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const navLinks = [
+                { name: 'Home', id: 'home' },
+                { name: 'About', id: 'about' },
+                { name: 'Skills', id: 'skills' },
+                { name: 'Project', id: 'project' },
+                { name: 'Contact', id: 'contact' },
+            ];
+
+            return (
+                <div className="min-h-screen bg-slate-900 text-slate-300 font-sans selection:bg-blue-500 selection:text-white">
+                    
+                    {/* Navigation */}
+                    <nav className="fixed top-0 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-50">
+                        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                            <div className="text-xl font-bold text-white tracking-tighter">
+                                양준우<span className="text-blue-500">-Synapse Docs</span>
+                            </div>
+                            <div className="hidden md:flex space-x-8">
+                                {navLinks.map((link) => (
+                                    <a
+                                        key={link.id}
+                                        href={`#${link.id}`}
+                                        className={`text-sm font-medium transition-colors hover:text-blue-400 ${
+                                            activeSection === link.id ? 'text-blue-500' : 'text-slate-400'
+                                        }`}
+                                    >
+                                        {link.name}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <Section id="home" className="flex flex-col justify-center min-h-screen pt-16">
+                        <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
+                            <h2 className="text-blue-500 font-semibold tracking-wide uppercase mb-4">Cloud Developer</h2>
+                            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                                안정적이고 확장 가능한 <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                                    인프라와 서비스를 구축합니다
+                                </span>
+                            </h1>
+                            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+                                성능과 효율을 극대화하는 클라우드 개발자, 양준우입니다.
+                            </p>
+                            <div className="flex justify-center space-x-4">
+                                <a href="#project" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all flex items-center">
+                                    프로젝트 보기 <Icons.ChevronDown className="ml-2 w-4 h-4" />
+                                </a>
+                                <a href="https://github.com/junwoo0725" target="_blank" className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition-all flex items-center border border-slate-700">
+                                    <Icons.Github className="mr-2 w-4 h-4" /> GitHub
+                                </a>
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* About Me */}
+                    <Section id="about" className="bg-slate-900/50">
+                        <div className="max-w-6xl mx-auto animate-fade-in-up delay-100">
+                            <div className="max-w-4xl mx-auto">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-white mb-6 flex items-center">
+                                        <span className="w-8 h-1 bg-blue-500 mr-4 rounded-full"></span>
+                                        About Me
+                                    </h2>
+                                    <div className="space-y-4 text-slate-400 leading-relaxed">
+                                        <p>
+                                            저는 <strong className="text-slate-200">안정적이고 효율적인 서비스</strong>를 구축하는 데 가치를 두는 클라우드 개발자입니다.
+                                        </p>
+                                        <p>
+                                            AWS, Docker, Ollama 등 다양한 환경에서 자동화, 확장성, 비용 최적화가 가능한 구조를 만드는 경험을 쌓아왔습니다.
+                                        </p>
+                                        <p>
+                                            최근 <strong className="text-blue-400">Synapse Docs</strong> 프로젝트를 통해 로컬 환경에서도 강력하게 동작하는 AI 문서 분석 시스템을 구축하며, OCR·임베딩·LLM 파이프라인 설계 및 벡터 검색, 스트림 인터페이스 등 AI 시스템 전반의 실전 역량을 높였습니다.
+                                        </p>
+                                    </div>
+                                    <div className="mt-8 flex flex-col space-y-3">
+                                        <div className="flex items-center text-slate-300">
+                                            <Icons.Mail className="w-5 h-5 mr-3 text-blue-500" />
+                                            wnsgur4960@naver.com
+                                        </div>
+                                        <div className="flex items-center text-slate-300">
+                                            <Icons.Github className="w-5 h-5 mr-3 text-blue-500" />
+                                            github.com/junwoo0725
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* Skills */}
+                    <Section id="skills">
+                        <div className="max-w-6xl mx-auto animate-fade-in-up delay-100">
+                            <h2 className="text-3xl font-bold text-white mb-12 flex items-center">
+                                <span className="w-8 h-1 bg-blue-500 mr-4 rounded-full"></span>
+                                Technical Skills
+                            </h2>
+                            
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <Card>
+                                    <div className="flex items-center mb-4 text-blue-400">
+                                        <Icons.Database className="mr-2" />
+                                        <h3 className="text-lg font-bold text-white">Backend</h3>
+                                    </div>
+                                    <div className="flex flex-wrap">
+                                        <Badge>Node.js</Badge>
+                                        <Badge>Python</Badge>
+                                    </div>
+                                </Card>
+
+                                <Card>
+                                    <div className="flex items-center mb-4 text-emerald-400">
+                                        <Icons.Cpu className="mr-2" />
+                                        <h3 className="text-lg font-bold text-white">AI / LLM</h3>
+                                    </div>
+                                    <div className="flex flex-wrap">
+                                        <Badge>Ollama (gemma3)</Badge>
+                                        <Badge>Google Gemini API</Badge>
+                                        <Badge>RAG</Badge>
+                                        <Badge>Embeddings</Badge>
+                                    </div>
+                                </Card>
+
+                                <Card>
+                                    <div className="flex items-center mb-4 text-indigo-400">
+                                        <Icons.Code className="mr-2" />
+                                        <h3 className="text-lg font-bold text-white">Frontend / Web</h3>
+                                    </div>
+                                    <div className="flex flex-wrap">
+                                        <Badge>JavaScript</Badge>
+                                        <Badge>Streamlit</Badge>
+                                    </div>
+                                </Card>
+
+                                <Card>
+                                    <div className="flex items-center mb-4 text-orange-400">
+                                        <Icons.FileText className="mr-2" />
+                                        <h3 className="text-lg font-bold text-white">OCR & Processing</h3>
+                                    </div>
+                                    <div className="flex flex-wrap">
+                                        <Badge>pypdf</Badge>
+                                        <Badge>pdf2image</Badge>
+                                        <Badge>Tesseract OCR</Badge>
+                                        <Badge>ReportLab</Badge>
+                                    </div>
+                                </Card>
+
+                                <Card>
+                                    <div className="flex items-center mb-4 text-pink-400">
+                                        <Icons.Server className="mr-2" />
+                                        <h3 className="text-lg font-bold text-white">DevOps & Tools</h3>
+                                    </div>
+                                    <div className="flex flex-wrap">
+                                        <Badge>Docker</Badge>
+                                        <Badge>Git</Badge>
+                                        <Badge>Figma</Badge>
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* Project: Synapse Docs */}
+                    <Section id="project" className="bg-slate-800/30">
+                        <div className="max-w-6xl mx-auto animate-fade-in-up delay-100">
+                            <div className="flex flex-col md:flex-row justify-between items-start mb-10">
+                                <div>
+                                    <h2 className="text-4xl font-bold text-white mb-2">Synapse Docs</h2>
+                                    <p className="text-xl text-blue-400 mb-4">로컬 기반 AI 문서 분석 및 협업 시스템</p>
+                                    
+                                    {/* 배포 링크 버튼 추가 */}
+                                    <a 
+                                        href="https://github.com/junwoo0725/Synapse-Docs-Deploy" 
+                                        target="_blank" 
+                                        className="inline-flex items-center px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors border border-slate-600 group"
+                                    >
+                                        <Icons.Github className="w-4 h-4 mr-2 group-hover:text-blue-400 transition-colors" />
+                                        배포 저장소 (Deploy Repo) 바로가기
+                                        <Icons.ExternalLink className="w-3 h-3 ml-2 text-slate-400 group-hover:text-white transition-colors" />
+                                    </a>
+                                </div>
+                                <div className="mt-4 md:mt-0 flex space-x-3">
+                                    <Badge color="bg-blue-600/20 text-blue-300 border border-blue-500/30">Python</Badge>
+                                    <Badge color="bg-orange-600/20 text-orange-300 border border-orange-500/30">Streamlit</Badge>
+                                    <Badge color="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30">Ollama</Badge>
+                                </div>
+                            </div>
+
+                            {/* Problem & Solution */}
+                            <div className="grid md:grid-cols-2 gap-8 mb-16">
+                                <div className="bg-red-500/5 p-6 rounded-xl border border-red-500/20">
+                                    <h3 className="text-red-400 font-bold mb-4 flex items-center">
+                                        <Icons.Zap className="mr-2 w-5 h-5" /> 문제 정의 (Problem)
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300 text-sm">
+                                        <li>스캔 PDF(이미지)를 처리 못하는 기존 요약 서비스의 한계</li>
+                                        <li>클라우드 LLM 의존 시 발생하는 비용 증가 및 보안 우려</li>
+                                        <li>문서 비교, 자동 목차 등 실무 필수 기능의 부재</li>
+                                        <li>네트워크 없는 환경에서의 사용 불가</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-emerald-500/5 p-6 rounded-xl border border-emerald-500/20">
+                                    <h3 className="text-emerald-400 font-bold mb-4 flex items-center">
+                                        <Icons.CheckCircle className="mr-2 w-5 h-5" /> 해결책 (Solution)
+                                    </h3>
+                                    <p className="text-slate-300 text-sm mb-4">
+                                        완전 로컬 기반 문서 분석 AI <strong>Synapse Docs</strong> 개발
+                                    </p>
+                                    <ul className="list-disc list-inside space-y-2 text-slate-300 text-sm">
+                                        <li>PDF/TXT 업로드만으로 요약, 비교, Q&A 자동 처리</li>
+                                        <li>OCR 및 임베딩 파이프라인 내재화</li>
+                                        <li>네트워크 없이 100% 로컬 실행 (비용 0원)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Core Features */}
+                            <div className="mb-16">
+                                <h3 className="text-2xl font-bold text-white mb-8">핵심 기능 (Key Features)</h3>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <Card>
+                                        <FeatureItem 
+                                            icon={Icons.FileText}
+                                            title="문서 자동 요약 & 키워드"
+                                            desc="전체 텍스트 분석, 요약 수준 선택(짧게/자세히), 키워드 5~10개 자동 생성, 결과물 다운로드 지원"
+                                        />
+                                        <FeatureItem 
+                                            icon={Icons.GitBranch}
+                                            title="문서 비교 (Diff)"
+                                            desc="2개 이상의 문서를 비교하여 공통점과 차이점을 자동 분석. 버전 관리 및 계약서 검토에 최적화"
+                                        />
+                                        <FeatureItem 
+                                            icon={Icons.List}
+                                            title="자동 목차 생성"
+                                            desc="문서 구조를 분석해 논리적 목차를 생성, 긴 문서의 흐름을 한눈에 파악 가능"
+                                        />
+                                    </Card>
+                                    <Card>
+                                        <FeatureItem 
+                                            icon={Icons.Highlighter}
+                                            title="중요 문장 하이라이트"
+                                            desc="보고서/논문에서 가장 핵심적인 문장 5~10개를 자동 추출하여 강조"
+                                        />
+                                        <FeatureItem 
+                                            icon={Icons.MessageSquare}
+                                            title="문서 기반 Q&A (RAG)"
+                                            desc="질문 임베딩 → Top-K 검색 → 답변 생성. '문서에 없는 내용은 답변 금지' 로직으로 환각 최소화"
+                                        />
+                                    </Card>
+                                </div>
+                            </div>
+
+                            {/* Architecture & Role */}
+                            <div className="grid lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-2 bg-slate-800 rounded-xl p-8 border border-slate-700">
+                                    <h3 className="text-xl font-bold text-white mb-6">시스템 아키텍처</h3>
+                                    <div className="flex flex-col space-y-4">
+                                        <div className="w-full h-64 bg-slate-900 rounded-lg border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500">
+                                            <Icons.Layers className="mb-4 text-slate-600 w-12 h-12" />
+                                            <p>시스템 아키텍처 다이어그램</p>
+                                            <p className="text-xs mt-2">(Streamlit ↔ Backend Logic ↔ Ollama/OCR)</p>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+                                            <div className="p-3 bg-slate-700/50 rounded">
+                                                <span className="font-bold text-blue-400 block mb-1">Frontend</span>
+                                                Streamlit 웹앱
+                                            </div>
+                                            <div className="p-3 bg-slate-700/50 rounded">
+                                                <span className="font-bold text-emerald-400 block mb-1">Processing</span>
+                                                pypdf, Tesseract OCR
+                                            </div>
+                                            <div className="p-3 bg-slate-700/50 rounded">
+                                                <span className="font-bold text-indigo-400 block mb-1">AI Core</span>
+                                                Ollama (Gemma3, Nomic), RAG
+                                            </div>
+                                            <div className="p-3 bg-slate-700/50 rounded">
+                                                <span className="font-bold text-pink-400 block mb-1">Output</span>
+                                                ReportLab PDF Gen
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+                                        <h3 className="text-lg font-bold text-white mb-4">나의 역할 & 기여</h3>
+                                        <ul className="space-y-3 text-sm text-slate-300">
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">•</span>
+                                                Streamlit 기반 전체 웹앱 UI/UX 및 구조 설계
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">•</span>
+                                                Ollama + Gemini 하이브리드 LLM 아키텍처 구성
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">•</span>
+                                                OCR(이미지 텍스트 추출) 통합 파이프라인 구축
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">•</span>
+                                                임베딩 기반 RAG(검색) 알고리즘 구현
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">•</span>
+                                                ReportLab을 활용한 리포트 자동 생성 기능 개발
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-blue-900/20 rounded-xl p-6 border border-blue-500/20">
+                                        <h3 className="text-lg font-bold text-blue-300 mb-4">성과 및 결과</h3>
+                                        <ul className="space-y-2 text-sm text-slate-300">
+                                            <li>🚀 완전 오프라인 환경 동작 성공</li>
+                                            <li>💰 API 비용 0원 (Ollama 기반)</li>
+                                            <li>👁️ OCR 인식률 약 95% 달성</li>
+                                            <li>⏳ 긴 문서 분석 시간 대폭 단축</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="mt-12 p-6 bg-slate-700/30 rounded-xl border border-slate-700">
+                                <h3 className="text-xl font-bold text-white mb-4">Project Reflection</h3>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div>
+                                        <h4 className="font-semibold text-slate-200 mb-2">💡 배운 점</h4>
+                                        <p className="text-slate-400 text-sm leading-relaxed">
+                                            LLM 기반 문서 분석 파이프라인을 처음부터 끝까지 직접 구축하며 RAG 구조와 데이터 흐름을 깊이 이해했습니다. OCR과 LLM의 조합이 실무 효율성을 얼마나 높일 수 있는지 체감했습니다.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-slate-200 mb-2">🔧 개선할 점</h4>
+                                        <p className="text-slate-400 text-sm leading-relaxed">
+                                            현재 로컬 서버 전용인 구조를 Docker 컨테이너화하여 클라우드(AWS)에 배포할 계획입니다. 또한 모델 교체 시 품질 보정을 위한 관리 모듈과 시각화 대시보드를 추가할 예정입니다.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* Contact */}
+                    <Section id="contact" className="py-24 animate-fade-in-up delay-200">
+                        <div className="max-w-4xl mx-auto text-center">
+                            <h2 className="text-3xl font-bold text-white mb-8">Get In Touch</h2>
+                            <p className="text-slate-400 mb-10">
+                                새로운 기회와 협업에 언제나 열려있습니다. <br />
+                                안정적인 시스템 구축이 필요하시다면 언제든 연락주세요.
+                            </p>
+                            
+                            <div className="flex flex-col md:flex-row justify-center items-center gap-6">
+                                <a 
+                                    href="mailto:wnsgur4960@naver.com" 
+                                    className="flex items-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl transition-all shadow-lg shadow-blue-900/20"
+                                >
+                                    <Icons.Mail />
+                                    <span className="font-medium">wnsgur4960@naver.com</span>
+                                </a>
+                                
+                                <a 
+                                    href="https://github.com/junwoo0725" 
+                                    target="_blank" 
+                                    className="flex items-center space-x-3 bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-xl transition-all border border-slate-700"
+                                >
+                                    <Icons.Github />
+                                    <span className="font-medium">GitHub 방문하기</span>
+                                    <Icons.ExternalLink className="text-slate-500 w-4 h-4" />
+                                </a>
+                            </div>
+                        </div>
+                    </Section>
+
+                    {/* Footer */}
+                    <footer className="bg-slate-950 py-8 border-t border-slate-900">
+                        <div className="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm">
+                            <p>© {new Date().getFullYear()} Yang Junwoo. All rights reserved.</p>
+                            <p className="mt-2">Built with React & Tailwind CSS</p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
